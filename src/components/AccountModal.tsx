@@ -15,6 +15,7 @@ import {
 import { ExternalLinkIcon, CopyIcon } from '@chakra-ui/icons'
 import { useEthers } from '@usedapp/core'
 import Identicon from './Identicon'
+import { Web3Provider } from "@usedapp/core/node_modules/@ethersproject/providers"
 
 type Props = {
   isOpen: any
@@ -22,12 +23,14 @@ type Props = {
 }
 
 export default function AccountModal({ isOpen, onClose }: Props) {
-  const { account, deactivate } = useEthers()
+  const { account, deactivate, library } = useEthers()
 
   const handleDeactivateAccount = () => {
     deactivate()
     onClose()
   }
+
+  const accountText = getAccountText(account, library);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} isCentered size='md'>
@@ -153,4 +156,19 @@ export default function AccountModal({ isOpen, onClose }: Props) {
       </ModalContent>
     </Modal>
   )
+}
+
+async function getAccountText(account: string | null | undefined, library: Web3Provider | undefined) {
+  if (!account || !library) {
+    return account
+  }
+  const ens = await library.lookupAddress(account)
+  if (ens) {
+    return ens
+  }
+  return abbreviatedAddress(account)
+}
+
+function abbreviatedAddress(account: string) {
+ return `${account.slice(0, 6)}...${account.slice(account.length - 4, account.length)}`
 }
